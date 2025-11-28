@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>Math Catcher Mini-Game</title>
+<style>
+  body {
+    margin:0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+    min-height:100vh;
+    color:white;
+  }
+
+  h1{
+    margin:20px 0;
+    font-size:2rem;
+    text-align:center;
+  }
+
+  #gameArea {
+    position:relative;
+    width:90%;
+    max-width:500px;
+    height:50vh;
+    min-height:300px;
+    background: rgba(255,255,255,0.1);
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+  }
+
+  .falling-number {
+    position:absolute;
+    font-size:1.5rem;
+    font-weight:bold;
+    padding:6px 10px;
+    background: #ffd166;
+    color: #222;
+    border-radius:8px;
+    user-select:none;
+    white-space:nowrap;
+  }
+
+  #controls {
+    margin-top:15px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  input{
+    padding:10px;
+    font-size:1rem;
+    border-radius:8px;
+    border:none;
+    outline:none;
+    flex:1;
+    min-width:120px;
+  }
+
+  button{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    background:#00eaff;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+  }
+
+  button:hover{
+    background:#00b8cc;
+  }
+
+  #scoreboard{
+    margin-top:15px;
+    font-size:1.1rem;
+    text-align:center;
+  }
+
+  .back-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 10px;
+        text-decoration: none;
+        color: #000;
+        font-weight: 700;
+        backdrop-filter: blur(10px);
+        z-index: 999;
+    }
+
+  @media (max-width:480px){
+    #gameArea{
+      height:40vh;
+    }
+    .falling-number{
+      font-size:1.2rem;
+      padding:4px 8px;
+    }
+    input{
+      font-size:0.95rem;
+      padding:8px;
+    }
+    button{
+      padding:8px 12px;
+      font-size:0.95rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<h1>Math Catcher 🎯</h1>
+<div id="gameArea"></div>
+
+<div id="controls">
+  <input type="number" id="answerInput" placeholder="Type answer"/>
+  <button id="submitBtn">Submit</button>
+</div>
+
+<div id="scoreboard">Score: 0 | Lives: 3</div>
+
+<script>
+const gameArea = document.getElementById('gameArea');
+const answerInput = document.getElementById('answerInput');
+const submitBtn = document.getElementById('submitBtn');
+const scoreboard = document.getElementById('scoreboard');
+
+let score = 0;
+let lives = 3;
+let currentNumberEl = null;
+let currentAnswer = null;
+let animationId = null;
+
+// Spawn a new number
+function spawnNumber(){
+  // Remove previous number
+  if(currentNumberEl){
+    currentNumberEl.remove();
+    cancelAnimationFrame(animationId);
+  }
+
+  const num1 = Math.floor(Math.random()*10)+1;
+  const num2 = Math.floor(Math.random()*10)+1;
+  currentAnswer = num1 + num2;
+
+  const numberEl = document.createElement('div');
+  numberEl.classList.add('falling-number');
+  numberEl.textContent = `${num1} + ${num2}`;
+  numberEl.style.left = Math.random() * (gameArea.clientWidth - 60) + 'px';
+  numberEl.style.top = '-40px';
+  gameArea.appendChild(numberEl);
+  currentNumberEl = numberEl;
+
+  let topPos = -40;
+
+  function fall(){
+    topPos += 2; // speed
+    numberEl.style.top = topPos + 'px';
+    if(topPos > gameArea.clientHeight){
+      loseLife();
+      spawnNumber();
+    } else {
+      animationId = requestAnimationFrame(fall);
+    }
+  }
+
+  animationId = requestAnimationFrame(fall);
+}
+
+// Check answer
+function checkAnswer(){
+  const val = parseInt(answerInput.value);
+  if(val === currentAnswer){
+    score++;
+    if(currentNumberEl) currentNumberEl.remove();
+    spawnNumber();
+  } else {
+    loseLife();
+  }
+  updateScore();
+  answerInput.value = '';
+  answerInput.focus();
+}
+
+// Lose life
+function loseLife(){
+  lives--;
+  updateScore();
+  if(lives <=0){
+    alert(`Game Over! Final score: ${score}`);
+    resetGame();
+  }
+}
+
+// Update scoreboard
+function updateScore(){
+  scoreboard.textContent = `Score: ${score} | Lives: ${lives}`;
+}
+
+// Reset game
+function resetGame(){
+  score = 0;
+  lives = 3;
+  updateScore();
+  if(currentNumberEl) currentNumberEl.remove();
+  spawnNumber();
+}
+
+// Start the first number
+spawnNumber();
+
+// Submit button & Enter key
+submitBtn.addEventListener('click', checkAnswer);
+answerInput.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter') checkAnswer();
+});
+</script>
+
+</body>
+</html>

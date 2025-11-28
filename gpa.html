@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>GPA Calculator</title>
+
+<style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        color: white;
+        margin: 0;
+        padding-top: 80px; /* Space for back button */
+    }
+
+    h1 {
+        text-align: center;
+        margin: 20px 0;
+        font-size: 2.5rem;
+        font-weight: 900;
+        text-shadow: 0 0 12px rgba(0,0,0,0.7);
+        animation: fadeIn 1s ease;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 800px;
+        margin: 20px auto 40px;
+        padding: 25px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 25px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: slideUp 1s ease;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        color: #222;
+        margin-top: 20px;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: center;
+    }
+
+    th {
+        background: rgba(255,255,255,0.3);
+    }
+
+    td input, td select {
+        width: 90%;
+        max-width: 100%;
+        padding: 5px;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        margin: 10px 0;
+        background: black;
+        color: white;
+        transition: 0.25s;
+    }
+
+    button:hover {
+        background: #111;
+        transform: scale(1.03);
+    }
+
+    .result {
+        margin-top: 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: yellow;
+        text-shadow: 0 0 10px black;
+        text-align: center;
+    }
+
+    .back-btn {
+        position: fixed; /* Fixed so it doesn’t scroll away */
+        top: 20px;
+        left: 20px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 10px;
+        text-decoration: none;
+        color: #000;
+        backdrop-filter: blur(10px);
+        font-weight: 700;
+        z-index: 9999;
+    }
+
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    @keyframes slideUp { from {transform: translateY(40px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+        h1 { font-size: 2rem; }
+        .container { padding: 15px; }
+        td input, td select { font-size: 0.9rem; }
+        button { font-size: 1rem; }
+        table { font-size: 0.9rem; }
+        .back-btn { padding: 8px 14px; font-size: 0.9rem; }
+    }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<h1>GPA Calculator</h1>
+
+<div class="container">
+
+    <table id="gpaTable">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Credit Units</th>
+                <th>Grade</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be added dynamically -->
+        </tbody>
+    </table>
+
+    <button onclick="addRow()">Add Subject</button>
+    <button onclick="calculateGPA()">Calculate GPA</button>
+
+    <div class="result" id="gpaResult"></div>
+</div>
+
+<script>
+function addRow() {
+    const tbody = document.querySelector("#gpaTable tbody");
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td><input type="text" placeholder="Subject Name"></td>
+        <td><input type="number" min="0" value="1"></td>
+        <td>
+            <select>
+                <option value="4">A</option>
+                <option value="3">B</option>
+                <option value="2">C</option>
+                <option value="1">D</option>
+                <option value="0">F</option>
+            </select>
+        </td>
+        <td><button onclick="removeRow(this)">X</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function removeRow(button) {
+    button.closest("tr").remove();
+}
+
+function calculateGPA() {
+    const rows = document.querySelectorAll("#gpaTable tbody tr");
+    let totalPoints = 0;
+    let totalUnits = 0;
+
+    rows.forEach(row => {
+        const units = parseFloat(row.cells[1].querySelector("input").value);
+        const grade = parseFloat(row.cells[2].querySelector("select").value);
+        if (!isNaN(units) && !isNaN(grade)) {
+            totalPoints += units * grade;
+            totalUnits += units;
+        }
+    });
+
+    if (totalUnits === 0) {
+        document.getElementById("gpaResult").innerText = "Add some subjects first!";
+        return;
+    }
+
+    const gpa = (totalPoints / totalUnits).toFixed(2);
+    document.getElementById("gpaResult").innerText = `Your GPA: ${gpa}`;
+}
+
+// Add first row by default
+addRow();
+</script>
+
+</body>
+</html>

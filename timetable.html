@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>Weekly Timetable</title>
+
+<style>
+/* GLOBAL */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #4b79ff, #6a11cb);
+    color: white;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 2rem;
+    font-weight: 900;
+    text-shadow: 0 3px 12px rgba(0,0,0,0.7);
+}
+
+/* BACK BUTTON */
+.back-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 7px 12px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 8px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 700;
+    backdrop-filter: blur(10px);
+}
+
+/* CONTAINER */
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: 25px auto;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* INPUTS */
+.input-group {
+    width: 100%;
+}
+
+label {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    background: black;
+    color: white;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #111;
+    transform: scale(1.02);
+}
+
+/* GRID */
+.grid {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+.day-col {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 10px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    min-width: 130px; /* prevents squashing */
+}
+
+.day-title {
+    font-size: 1.2rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    background: rgba(0,0,0,0.3);
+    padding: 7px;
+    border-radius: 10px;
+}
+
+.slot {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    transition: 0.25s;
+}
+
+.slot:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(255,255,255,0.4);
+}
+
+.time {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.x-btn {
+    margin-top: 6px;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    background: red;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+
+/* Tablets */
+@media (max-width: 780px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Phones (your 412px size) */
+@media (max-width: 450px) {
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .back-btn {
+        padding: 5px 10px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+
+    .container {
+        padding: 12px;
+        border-radius: 15px;
+    }
+
+    input, select {
+        padding: 10px;
+        font-size: 0.95rem;
+        border-radius: 8px;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 1.05rem;
+        border-radius: 10px;
+    }
+
+    .day-col {
+        min-width: 120px;
+    }
+
+    .day-title {
+        font-size: 1rem;
+    }
+
+    .slot {
+        font-size: 0.85rem;
+        padding: 7px;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<h1>Weekly Timetable</h1>
+
+<div class="container">
+
+    <div class="input-group" style="width: 300px;">
+        <label>Day</label>
+        <select id="day">
+            <option>Monday</option>
+            <option>Tuesday</option>
+            <option>Wednesday</option>
+            <option>Thursday</option>
+            <option>Friday</option>
+            <option>Saturday</option>
+        </select>
+
+        <label>Subject</label>
+        <input id="subject" placeholder="E.g. Mathematics, English">
+
+        <label>Time</label>
+        <input type="time" id="time">
+    </div>
+
+    <button onclick="addClass()">Add to Timetable</button>
+
+    <div class="grid" id="grid"></div>
+
+</div>
+
+<script>
+let timetable = JSON.parse(localStorage.getItem("weekly")) || [];
+const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+function save() {
+    localStorage.setItem("weekly", JSON.stringify(timetable));
+}
+
+function buildGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    days.forEach(day => {
+        const column = document.createElement("div");
+        column.className = "day-col";
+        column.innerHTML = `<div class="day-title">${day}</div>`;
+
+        const dayItems = timetable.filter(item => item.day === day);
+        dayItems.sort((a, b) => a.time.localeCompare(b.time));
+
+        dayItems.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "slot";
+            div.innerHTML = `
+                <div>${item.subject}</div>
+                <div class="time">${item.time}</div>
+                <button class="x-btn">x</button>
+            `;
+            div.querySelector(".x-btn").onclick = () => {
+                let realIndex = timetable.findIndex(x =>
+                    x.day === item.day && x.subject === item.subject && x.time === item.time
+                );
+                timetable.splice(realIndex, 1);
+                save();
+                buildGrid();
+            };
+            column.appendChild(div);
+        });
+
+        grid.appendChild(column);
+    });
+}
+
+function addClass() {
+    let day = document.getElementById("day").value;
+    let subject = document.getElementById("subject").value;
+    let time = document.getElementById("time").value;
+
+    if (!subject || !time) {
+        alert("Enter subject and time");
+        return;
+    }
+
+    timetable.push({ day, subject, time });
+    save();
+    buildGrid();
+
+    document.getElementById("subject").value = "";
+    document.getElementById("time").value = "";
+}
+
+buildGrid();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>School Calendar</title>
+
+<style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+        margin: 0;
+        padding: 80px 10px 40px; /* top padding for fixed back button */
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        font-size: 2.2rem;
+    }
+
+    .calendar {
+        width: 100%;
+        max-width: 550px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .calendar-header button {
+        background: #4a90e2;
+        border: none;
+        padding: 8px 15px;
+        color: white;
+        font-size: 1rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin: 5px 0;
+    }
+
+    .calendar-header button:hover {
+        background: #72aaf5;
+        transform: scale(1.05);
+    }
+
+    .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        font-weight: bold;
+        color: #444;
+        margin-bottom: 10px;
+    }
+
+    .dates {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+    }
+
+    .date {
+        background: #f1f1f1;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .date:hover {
+        background: #dbeafe;
+        transform: scale(1.05);
+    }
+
+    .today {
+        background: #4a90e2 !important;
+        color: white;
+        font-weight: bold;
+    }
+
+    /* Popup */
+    .popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        width: 90%;
+        max-width: 350px;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        display: none;
+        animation: pop 0.3s ease;
+        z-index: 9999;
+    }
+
+    @keyframes pop {
+        from { transform: translate(-50%, -60%); opacity: 0; }
+        to { transform: translate(-50%, -50%); opacity: 1; }
+    }
+
+    .popup input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 12px;
+        font-size: 1rem;
+    }
+
+    .popup button {
+        background: #4a90e2;
+        border: none;
+        padding: 10px 20px;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+
+    .close-btn {
+        background: #ff2d55 !important;
+        margin-left: 10px;
+    }
+
+    .back-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 10px;
+        text-decoration: none;
+        color: #000;
+        backdrop-filter: blur(10px);
+        font-weight: 700;
+        z-index: 10000;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+        h1 { font-size: 1.8rem; }
+        .calendar-header h2 { font-size: 1rem; margin: 5px 0; }
+        .calendar-header button { padding: 6px 12px; font-size: 0.9rem; }
+        .date { padding: 8px; font-size: 0.9rem; }
+        .days { gap: 4px; }
+        .dates { gap: 4px; }
+        .popup { padding: 15px; }
+    }
+</style>
+</head>
+
+<body>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<h1>📅 School Calendar</h1>
+
+<div class="calendar">
+    <div class="calendar-header">
+        <button onclick="prevMonth()">←</button>
+        <h2 id="monthYear"></h2>
+        <button onclick="nextMonth()">→</button>
+    </div>
+
+    <div class="days">
+        <div>Sun</div><div>Mon</div><div>Tue</div>
+        <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+
+    <div class="dates" id="dates"></div>
+</div>
+
+<!-- Popup -->
+<div class="popup" id="popup">
+    <h3 id="popupDate"></h3>
+    <input type="text" id="eventText" placeholder="Event / Reminder" />
+    <button onclick="saveEvent()">Save</button>
+    <button class="close-btn" onclick="closePopup()">Close</button>
+</div>
+
+<script>
+    let date = new Date();
+    let events = {}; 
+
+    function renderCalendar() {
+        const monthYear = document.getElementById("monthYear");
+        const dates = document.getElementById("dates");
+
+        const year = date.getFullYear();
+        const month = date.getMonth();
+
+        monthYear.innerText = date.toLocaleString("default", { month: "long", year: "numeric" });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        dates.innerHTML = "";
+
+        // Empty spaces before first day
+        for (let i = 0; i < firstDay; i++) {
+            dates.innerHTML += `<div></div>`;
+        }
+
+        // Dates
+        for (let d = 1; d <= lastDate; d++) {
+            let today = new Date();
+            let isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+            dates.innerHTML += `
+                <div class="date ${isToday ? "today" : ""}" onclick="openPopup(${d})">
+                    ${d}
+                </div>`;
+        }
+    }
+
+    function prevMonth() {
+        date.setMonth(date.getMonth() - 1);
+        renderCalendar();
+    }
+
+    function nextMonth() {
+        date.setMonth(date.getMonth() + 1);
+        renderCalendar();
+    }
+
+    // Popup
+    let selectedDate = null;
+
+    function openPopup(day) {
+        selectedDate = `${day}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        document.getElementById("popupDate").innerText = "Add event for " + selectedDate;
+
+        document.getElementById("popup").style.display = "block";
+    }
+
+    function closePopup() {
+        document.getElementById("popup").style.display = "none";
+    }
+
+    function saveEvent() {
+        const text = document.getElementById("eventText").value;
+        if (!text) return;
+
+        events[selectedDate] = text;
+        alert("Event saved!");
+
+        document.getElementById("eventText").value = "";
+        closePopup();
+    }
+
+    renderCalendar();
+</script>
+
+</body>
+</html>

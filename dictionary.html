@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <title>Dictionary</title>
+
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, #1a1a40, #3a0ca3);
+            margin: 0;
+            padding: 40px;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            animation: fadeDown 1s ease;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-box {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            animation: popIn 0.8s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        input {
+            width: 300px;
+            padding: 10px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            background: #f72585;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #ff4fa6;
+            transform: scale(1.05);
+        }
+
+        .result-card {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin: auto;
+            margin-top: 25px;
+            text-align: left;
+            animation: fadeUp 0.6s ease;
+            display: none;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .word {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .meaning {
+            font-size: 1.1rem;
+            margin-top: 10px;
+            line-height: 1.6rem;
+        }
+
+.back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.65);
+            border-radius: 10px;
+            text-decoration: none;
+            color: #000;
+            backdrop-filter: blur(10px);
+            font-weight: 700;
+        }
+
+    </style>
+</head>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<body>
+
+    <h1>📚 School Dictionary</h1>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search a word...">
+        <button onclick="lookUp()">Search</button>
+    </div>
+
+    <div id="result" class="result-card">
+        <div class="word" id="wordName"></div>
+        <div class="meaning" id="wordMeaning"></div>
+    </div>
+
+    <script>
+        // 📘 Local Dictionary (expand anytime!)
+        const dictionary = {
+            "algorithm": "A step-by-step set of instructions used to solve a problem.",
+            "photosynthesis": "The process by which green plants make food using sunlight.",
+            "ecosystem": "A community of plants, animals, and organisms interacting with their environment.",
+            "atom": "The smallest unit of matter that has the properties of an element.",
+            "evaporation": "The process of turning liquid into vapor.",
+            "integer": "A whole number (not a fraction).",
+            "hypotenuse": "The longest side of a right-angled triangle.",
+            "velocity": "The speed of something in a given direction.",
+            "friction": "A force that opposes motion when two surfaces rub against each other.",
+"molecule": "A group of atoms bonded together.",
+"radius": "The distance from the center of a circle to its edge.",
+"equation": "A mathematical statement that two expressions are equal.",
+"nutrient": "A substance that provides nourishment for growth and health.",
+"continent": "One of the large landmasses of the Earth.",
+"gravity": "The force that attracts objects toward the center of the Earth.",
+"parallel": "Lines that are always the same distance apart and never meet.",
+"perpendicular": "Lines that intersect at a right angle (90°).",
+"thermometer": "An instrument used to measure temperature.",
+"evaporation": "The process of a liquid turning into vapor.",
+"condensation": "The process where gas cools and becomes liquid.",
+"division": "Splitting something into equal parts.",
+"photosphere": "The visible surface layer of the sun.",
+"respiration": "The process of breathing in oxygen and releasing carbon dioxide.",
+"variable": "A symbol used to represent a number in math or science.",
+"circumference": "The distance around a circle.",
+"crust": "The outer layer of the Earth.",
+"metamorphosis": "A major physical change in an organism’s form or structure.",
+"vertebrate": "An animal with a backbone.",
+"invertebrate": "An animal without a backbone.",
+"mixture": "A combination of two or more substances not chemically combined.",
+"solution": "A mixture where one substance dissolves into another.",
+"digit": "A single number (0–9).",
+"perimeter": "The total distance around a shape.",
+"area": "The amount of space inside a shape.",
+"temperature": "A measure of how hot or cold something is.",
+"orbit": "The path an object takes around another object.",
+"photosynthesis": "The process by which green plants make food using sunlight.",
+"equator": "An imaginary line dividing Earth into northern and southern halves.",
+"hemisphere": "Half of a sphere or half of the Earth.",
+"oxygen": "A gas essential for human and animal life.",
+"hydrogen": "The lightest and most abundant element in the universe.",
+"conductor": "A material that allows electricity or heat to pass through easily.",
+"insulator": "A material that does NOT allow heat or electricity to pass easily.",
+"energy": "The ability to do work or cause change.",
+"kinetic": "Related to motion.",
+"potential": "Stored energy or possibility.",
+"erosion": "The gradual wearing away of land by wind, water, or ice.",
+"ecosystem": "A community of organisms interacting with their environment.",
+"population": "A group of the same species living in the same area.",
+"habitat": "The natural home of an organism.",
+"climate": "Long-term weather conditions in an area.",
+"mass": "The amount of matter in an object.",
+"volume": "The amount of space an object occupies.",
+"lightyear": "The distance light travels in one year.",
+"biodiversity": "The variety of life in a particular area.",
+"atom": "The smallest unit of matter that keeps the properties of an element.",
+"cell": "The basic unit of life.",
+"hypothesis": "A suggested explanation that can be tested.",
+"experiment": "A scientific procedure to test an idea.",
+"frequency": "How often something occurs in a given time period.",
+"pressure": "The force applied per unit area.",
+"current": "The flow of electricity in a circuit.",
+"reflection": "The bouncing of light off a surface.",
+"refraction": "The bending of light as it enters a different medium.",
+"chromosome": "A structure containing DNA that carries genetic information.",
+"protein": "A molecule that helps build and repair body tissues.",
+"longitude": "Imaginary lines running north to south on a map.",
+"latitude": "Imaginary lines running east to west on a map."
+
+        };
+
+        function lookUp() {
+            const word = document.getElementById("searchInput").value.toLowerCase();
+            const resultCard = document.getElementById("result");
+            const wordName = document.getElementById("wordName");
+            const wordMeaning = document.getElementById("wordMeaning");
+
+            if (dictionary[word]) {
+                wordName.textContent = word.charAt(0).toUpperCase() + word.slice(1);
+                wordMeaning.textContent = dictionary[word];
+                resultCard.style.display = "block";
+            } else {
+                wordName.textContent = "Not Found";
+                wordMeaning.textContent = "This word is not in the dictionary yet.";
+                resultCard.style.display = "block";
+            }
+        }
+    </script>
+
+</body>
+</html>

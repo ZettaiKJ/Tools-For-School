@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>To-Do List</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        min-height: 100vh;
+        color: white;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 20px;
+        position: relative;
+    }
+
+    .back-btn {
+        position: absolute;
+        top: 25px;
+        left: 25px;
+        padding: 12px 18px;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 10px;
+        text-decoration: none;
+        color: #000;
+        backdrop-filter: blur(10px);
+        font-weight: 700;
+        z-index: 10;
+    }
+
+    .todo-box {
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        animation: popIn 0.8s ease;
+        margin-top: 80px;
+    }
+
+    @keyframes popIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    #taskCount {
+        text-align: center;
+        opacity: 0.8;
+        margin-bottom: 15px;
+    }
+
+    .input-area {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    input {
+        flex: 1;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+    }
+
+    button {
+        padding: 12px 18px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        opacity: 0.85;
+    }
+
+    #addBtn {
+        background: #00eaff;
+        color: #222;
+    }
+
+    #addBtn:hover { background: #00b8cc; }
+
+    #clearAll { background: #ffb84d; color: #222; margin-top: 10px; width: 48%; }
+    #completeAll { background: #4dff88; color: #222; margin-top: 10px; width: 48%; }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        background: rgba(255,255,255,0.9);
+        color: #222;
+        padding: 12px 15px;
+        margin-bottom: 12px;
+        border-radius: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.3s;
+        animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .completed {
+        text-decoration: line-through;
+        color: gray;
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+
+    .delete-btn {
+        background: #ff4d4d;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .delete-btn:hover { background: #cc0000; }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+        body { padding: 20px 10px; align-items: flex-start; }
+
+        .todo-box { width: 100%; padding: 20px; margin-top: 70px; }
+
+        .input-area { flex-direction: column; gap: 10px; }
+        input, button { width: 100%; font-size: 0.95rem; padding: 10px; }
+
+        h2 { font-size: 1.5rem; }
+
+        #clearAll, #completeAll { width: 100%; margin-top: 8px; }
+
+        .delete-btn { padding: 4px 8px; font-size: 0.7rem; }
+
+        .back-btn { padding: 8px 12px; top: 15px; left: 15px; font-size: 0.9rem; }
+    }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">⬅ Back</a>
+
+<div class="todo-box">
+    <h2>To-Do List</h2>
+    <p id="taskCount">0 tasks</p>
+
+    <div class="input-area" style="width: 300px;">
+        <input type="text" id="taskInput" placeholder="Enter a task...">
+        <button id="addBtn">Add</button>
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <div style="display:flex; gap:4%; flex-wrap:wrap;">
+        <button id="completeAll">Mark All Completed</button>
+        <button id="clearAll">Clear All</button>
+    </div>
+</div>
+
+<script>
+const taskInput = document.getElementById("taskInput");
+const taskList = document.getElementById("taskList");
+const addBtn = document.getElementById("addBtn");
+const clearAllBtn = document.getElementById("clearAll");
+const completeAllBtn = document.getElementById("completeAll");
+const taskCount = document.getElementById("taskCount");
+
+// Load saved tasks
+window.onload = () => {
+    loadTasks();
+    updateLocalStorage();
+};
+
+addBtn.onclick = () => {
+    let task = taskInput.value.trim();
+    if(!task) return;
+
+    createTaskElement(task, false);
+    saveTask(task, false);
+    taskInput.value = "";
+    updateLocalStorage();
+};
+
+function createTaskElement(text, completed) {
+    let li = document.createElement("li");
+    li.innerHTML = `
+        <span class="task-text ${completed ? 'completed' : ''}">${text}</span>
+        <button class="delete-btn">Delete</button>
+    `;
+    li.querySelector(".task-text").onclick = () => {
+        li.querySelector(".task-text").classList.toggle("completed");
+        updateLocalStorage();
+    };
+    li.querySelector(".delete-btn").onclick = () => {
+        li.remove();
+        updateLocalStorage();
+    };
+    taskList.appendChild(li);
+}
+
+function saveTask(text, completed) {
+    let tasks = JSON.parse(localStorage.getItem("tasks")||"[]");
+    tasks.push({text, completed});
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function loadTasks() {
+    let tasks = JSON.parse(localStorage.getItem("tasks")||"[]");
+    tasks.forEach(t => createTaskElement(t.text, t.completed));
+}
+
+function updateLocalStorage() {
+    let tasks = [];
+    document.querySelectorAll("#taskList li").forEach(li => {
+        let text = li.querySelector(".task-text").textContent;
+        let completed = li.querySelector(".task-text").classList.contains("completed");
+        tasks.push({text, completed});
+    });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    taskCount.textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''}`;
+}
+
+clearAllBtn.onclick = () => {
+    if(confirm("Are you sure you want to delete all tasks?")){
+        taskList.innerHTML = "";
+        localStorage.removeItem("tasks");
+        updateLocalStorage();
+    }
+};
+
+completeAllBtn.onclick = () => {
+    document.querySelectorAll("#taskList li .task-text").forEach(task=>task.classList.add("completed"));
+    updateLocalStorage();
+};
+</script>
+
+</body>
+</html>
